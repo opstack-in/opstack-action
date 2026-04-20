@@ -1,0 +1,55 @@
+name: 'OpStack Blast Radius Analysis'
+description: 'Analyse your Terraform plan against live cloud infrastructure to detect blast radius and deployment risks before merging.'
+author: 'OpStack'
+
+branding:
+  icon: 'shield'
+  color: 'yellow'
+
+inputs:
+  api-key:
+    description: 'Your OpStack API key (opstack_token_...). Store as a GitHub secret.'
+    required: true
+  environment-id:
+    description: 'The OpStack environment ID to analyse against. Find it in your environment URL.'
+    required: true
+  plan-file:
+    description: 'Path to the Terraform plan JSON file (generated via terraform show -json).'
+    required: true
+    default: 'plan.json'
+  fail-on:
+    description: 'Minimum severity that fails the pipeline. One of: CRITICAL, HIGH, MEDIUM, LOW, NONE.'
+    required: false
+    default: 'CRITICAL'
+  opstack-url:
+    description: 'OpStack API base URL. Override for self-hosted deployments.'
+    required: false
+    default: 'https://www.opstack.in'
+  poll-interval:
+    description: 'Seconds between polling for analysis completion.'
+    required: false
+    default: '5'
+  timeout:
+    description: 'Maximum seconds to wait for analysis to complete.'
+    required: false
+    default: '300'
+
+outputs:
+  analysis-id:
+    description: 'The OpStack analysis ID.'
+  analysis-url:
+    description: 'Direct URL to view the full analysis in OpStack.'
+  passed:
+    description: 'Whether the analysis passed the threshold (true/false).'
+  critical-count:
+    description: 'Number of critical findings.'
+  high-count:
+    description: 'Number of high findings.'
+  medium-count:
+    description: 'Number of medium findings.'
+  low-count:
+    description: 'Number of low findings.'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
