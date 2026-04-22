@@ -34636,13 +34636,17 @@ async function submitAnalysis(planFile, environmentId, baseUrl, context) {
         contentType: 'application/json',
     });
 
-    // Pass branch and commit SHA if available
+    // Pass branch, commit SHA and repo info
     if (context.ref) {
         const branch = context.ref.replace('refs/heads/', '');
         form.append('branch', branch);
     }
     if (context.sha) {
         form.append('commit_sha', context.sha.substring(0, 8));
+    }
+    if (context.repo) {
+        const repoFullName = `${context.repo.owner}/${context.repo.repo}`;
+        form.append('repo_full_name', repoFullName);
     }
 
     const url = `${baseUrl}/api/v1/analyses?environment_id=${environmentId}`;
