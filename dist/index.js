@@ -34621,6 +34621,19 @@ async function opsFetch(url, options = {}) {
     return response;
 }
 
+// ── Extract PR number from GitHub event context ───────────────────────────────
+function getPRNumber(context) {
+    // PR context comes through pull_request / pull_request_target events
+    if (context.payload && context.payload.pull_request) {
+        return context.payload.pull_request.number;
+    }
+    // Fallback - some event types put the number at the top level
+    if (context.payload && context.payload.number) {
+        return context.payload.number;
+    }
+    return null;
+}
+
 // ── Submit plan to OpStack ────────────────────────────────────────────────────
 async function submitAnalysis(planFile, environmentId, baseUrl, context) {
     core.info(`Submitting plan to OpStack environment ${environmentId}...`);
@@ -34649,8 +34662,18 @@ async function submitAnalysis(planFile, environmentId, baseUrl, context) {
         form.append('repo_full_name', repoFullName);
     }
 
-    const url = `${baseUrl}/api/v1/analyses?environment_id=${environmentId}`;
-    const response = await opsFetch(url, {
+    // Build the URL with query params - pr_number goes here so backend can
+    // post findings back to the PR after analysis completes
+    const url = new URL(`${baseUrl}/api/v1/analyses`);
+    url.searchParams.set('environment_id', environmentId);
+
+    const prNumber = getPRNumber(context);
+    if (prNumber) {
+        url.searchParams.set('pr_number', String(prNumber));
+        core.info(`Linked to PR #${prNumber}`);
+    }
+
+    const response = await opsFetch(url.toString(), {
         method: 'POST',
         body: form,
         headers: form.getHeaders(),
